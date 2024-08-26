@@ -4,11 +4,23 @@
 #
 #    pip-compile
 #
+aiohappyeyeballs==2.4.0
+    # via aiohttp
+aiohttp==3.10.5
+    # via gcsfs
+aiosignal==1.3.1
+    # via aiohttp
+alembic==1.13.2
+    # via dagster
+aniso8601==9.0.1
+    # via graphene
 anyio==4.4.0
     # via
     #   gql
     #   httpx
     #   jupyter-server
+    #   starlette
+    #   watchfiles
 argon2-cffi==23.1.0
     # via jupyter-server
 argon2-cffi-bindings==21.2.0
@@ -21,6 +33,7 @@ async-lru==2.0.4
     # via jupyterlab
 attrs==24.2.0
     # via
+    #   aiohttp
     #   jsonschema
     #   referencing
 babel==2.15.0
@@ -31,25 +44,66 @@ beautifulsoup4==4.12.3
     # via nbconvert
 bleach==6.1.0
     # via nbconvert
+cachetools==5.5.0
+    # via google-auth
 certifi==2024.7.4
     # via
     #   httpcore
     #   httpx
+    #   kubernetes
     #   requests
 cffi==1.17.0
     # via argon2-cffi-bindings
 charset-normalizer==3.3.2
     # via requests
+click==8.1.7
+    # via
+    #   dagster
+    #   dagster-webserver
+    #   uvicorn
+coloredlogs==14.0
+    # via dagster
 comm==0.2.2
     # via ipykernel
+croniter==3.0.3
+    # via dagster
 cytoolz==0.12.3
     # via eth-utils
+dagster==1.8.1
+    # via
+    #   -r requirements.in
+    #   dagster-gcp
+    #   dagster-graphql
+    #   dagster-k8s
+    #   dagster-pandas
+    #   dagster-postgres
+    #   dagster-webserver
+dagster-gcp==0.24.1
+    # via -r requirements.in
+dagster-graphql==1.8.1
+    # via dagster-webserver
+dagster-k8s==0.24.1
+    # via -r requirements.in
+dagster-pandas==0.24.1
+    # via dagster-gcp
+dagster-pipes==1.8.1
+    # via dagster
+dagster-postgres==0.24.1
+    # via -r requirements.in
+dagster-webserver==1.8.1
+    # via -r requirements.in
+db-dtypes==1.3.0
+    # via dagster-gcp
 debugpy==1.8.5
     # via ipykernel
 decorator==5.1.1
-    # via ipython
+    # via
+    #   gcsfs
+    #   ipython
 defusedxml==0.7.1
     # via nbconvert
+docstring-parser==0.16
+    # via dagster
 eth-abi==4.2.1
     # via python-cartesi
 eth-hash==0.7.0
@@ -64,18 +118,108 @@ executing==2.0.1
     # via stack-data
 fastjsonschema==2.20.0
     # via nbformat
+filelock==3.15.4
+    # via dagster
 fqdn==1.5.1
     # via jsonschema
-gql[requests]==3.5.0
+frozenlist==1.4.1
+    # via
+    #   aiohttp
+    #   aiosignal
+fsspec==2024.6.1
+    # via
+    #   gcsfs
+    #   universal-pathlib
+gcsfs==2024.6.1
     # via -r requirements.in
+google-api-core[grpc]==2.19.1
+    # via
+    #   google-api-python-client
+    #   google-cloud-bigquery
+    #   google-cloud-core
+    #   google-cloud-storage
+google-api-python-client==2.142.0
+    # via dagster-gcp
+google-auth==2.34.0
+    # via
+    #   dagster-k8s
+    #   gcsfs
+    #   google-api-core
+    #   google-api-python-client
+    #   google-auth-httplib2
+    #   google-auth-oauthlib
+    #   google-cloud-bigquery
+    #   google-cloud-core
+    #   google-cloud-storage
+    #   kubernetes
+google-auth-httplib2==0.2.0
+    # via google-api-python-client
+google-auth-oauthlib==1.2.1
+    # via gcsfs
+google-cloud-bigquery==3.25.0
+    # via dagster-gcp
+google-cloud-core==2.4.1
+    # via
+    #   google-cloud-bigquery
+    #   google-cloud-storage
+google-cloud-storage==2.18.2
+    # via
+    #   dagster-gcp
+    #   gcsfs
+google-crc32c==1.5.0
+    # via
+    #   google-cloud-storage
+    #   google-resumable-media
+google-resumable-media==2.7.2
+    # via
+    #   google-cloud-bigquery
+    #   google-cloud-storage
+googleapis-common-protos==1.63.2
+    # via
+    #   google-api-core
+    #   grpcio-status
+gql[requests]==3.5.0
+    # via
+    #   -r requirements.in
+    #   dagster-graphql
+graphene==3.3
+    # via dagster-graphql
 graphql-core==3.2.3
-    # via gql
+    # via
+    #   gql
+    #   graphene
+    #   graphql-relay
+graphql-relay==3.2.0
+    # via graphene
+greenlet==3.0.3
+    # via sqlalchemy
+grpcio==1.64.3
+    # via
+    #   dagster
+    #   google-api-core
+    #   grpcio-health-checking
+    #   grpcio-status
+grpcio-health-checking==1.62.3
+    # via dagster
+grpcio-status==1.62.3
+    # via google-api-core
 h11==0.14.0
-    # via httpcore
+    # via
+    #   httpcore
+    #   uvicorn
 httpcore==1.0.5
     # via httpx
+httplib2==0.22.0
+    # via
+    #   google-api-python-client
+    #   google-auth-httplib2
+    #   oauth2client
+httptools==0.6.1
+    # via uvicorn
 httpx==0.27.0
     # via jupyterlab
+humanfriendly==10.0
+    # via coloredlogs
 idna==3.7
     # via
     #   anyio
@@ -95,6 +239,7 @@ jedi==0.19.1
     # via ipython
 jinja2==3.1.4
     # via
+    #   dagster
     #   jupyter-server
     #   jupyterlab
     #   jupyterlab-server
@@ -142,18 +287,29 @@ jupyterlab-pygments==0.3.0
     # via nbconvert
 jupyterlab-server==2.27.3
     # via jupyterlab
+kubernetes==30.1.0
+    # via dagster-k8s
+mako==1.3.5
+    # via alembic
+markdown-it-py==3.0.0
+    # via rich
 markupsafe==2.1.5
     # via
     #   jinja2
+    #   mako
     #   nbconvert
 matplotlib-inline==0.1.7
     # via
     #   ipykernel
     #   ipython
+mdurl==0.1.2
+    # via markdown-it-py
 mistune==3.0.2
     # via nbconvert
 multidict==6.0.5
-    # via yarl
+    # via
+    #   aiohttp
+    #   yarl
 nbclient==0.10.0
     # via nbconvert
 nbconvert==7.16.4
@@ -168,11 +324,23 @@ nest-asyncio==1.6.0
 notebook-shim==0.2.4
     # via jupyterlab
 numpy==2.0.1
-    # via pandas
+    # via
+    #   db-dtypes
+    #   pandas
+    #   pyarrow
+oauth2client==4.1.3
+    # via dagster-gcp
+oauthlib==3.2.2
+    # via
+    #   kubernetes
+    #   requests-oauthlib
 overrides==7.7.0
     # via jupyter-server
 packaging==24.1
     # via
+    #   dagster
+    #   db-dtypes
+    #   google-cloud-bigquery
     #   ipykernel
     #   jupyter-server
     #   jupyterlab
@@ -180,7 +348,10 @@ packaging==24.1
     #   nbconvert
     #   pytest
 pandas==2.2.2
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   dagster-pandas
+    #   db-dtypes
 pandocfilters==1.5.1
     # via nbconvert
 parsimonious==0.9.0
@@ -197,39 +368,85 @@ prometheus-client==0.20.0
     # via jupyter-server
 prompt-toolkit==3.0.47
     # via ipython
+proto-plus==1.24.0
+    # via google-api-core
+protobuf==4.25.4
+    # via
+    #   dagster
+    #   google-api-core
+    #   googleapis-common-protos
+    #   grpcio-health-checking
+    #   grpcio-status
+    #   proto-plus
 psutil==6.0.0
     # via ipykernel
+psycopg2==2.9.9
+    # via -r requirements.in
+psycopg2-binary==2.9.9
+    # via dagster-postgres
 ptyprocess==0.7.0
     # via
     #   pexpect
     #   terminado
 pure-eval==0.2.3
     # via stack-data
+pyarrow==17.0.0
+    # via db-dtypes
+pyasn1==0.6.0
+    # via
+    #   oauth2client
+    #   pyasn1-modules
+    #   rsa
+pyasn1-modules==0.4.0
+    # via
+    #   google-auth
+    #   oauth2client
 pycparser==2.22
     # via cffi
 pycryptodome==3.19.1
     # via python-cartesi
 pydantic==1.10.17
-    # via python-cartesi
+    # via
+    #   dagster
+    #   python-cartesi
 pygments==2.18.0
     # via
     #   ipython
     #   nbconvert
+    #   rich
+pyparsing==3.1.4
+    # via httplib2
 pytest==7.4.4
-    # via python-cartesi
+    # via
+    #   -r requirements.in
+    #   python-cartesi
 python-cartesi==0.1.1
     # via -r requirements.in
 python-dateutil==2.9.0.post0
     # via
     #   arrow
+    #   croniter
+    #   google-cloud-bigquery
     #   jupyter-client
+    #   kubernetes
     #   pandas
+python-dotenv==1.0.1
+    # via
+    #   dagster
+    #   uvicorn
 python-json-logger==2.0.7
     # via jupyter-events
 pytz==2024.1
-    # via pandas
+    # via
+    #   croniter
+    #   dagster
+    #   pandas
 pyyaml==6.0.2
-    # via jupyter-events
+    # via
+    #   dagster
+    #   jupyter-events
+    #   kubernetes
+    #   uvicorn
 pyzmq==26.1.0
     # via
     #   ipykernel
@@ -245,10 +462,22 @@ regex==2024.7.24
 requests==2.32.3
     # via
     #   -r requirements.in
+    #   dagster
+    #   dagster-graphql
+    #   gcsfs
+    #   google-api-core
+    #   google-cloud-bigquery
+    #   google-cloud-storage
     #   gql
     #   jupyterlab-server
+    #   kubernetes
     #   python-cartesi
+    #   requests-oauthlib
     #   requests-toolbelt
+requests-oauthlib==2.0.0
+    # via
+    #   google-auth-oauthlib
+    #   kubernetes
 requests-toolbelt==1.0.0
     # via gql
 rfc3339-validator==0.1.4
@@ -259,16 +488,24 @@ rfc3986-validator==0.1.1
     # via
     #   jsonschema
     #   jupyter-events
+rich==13.7.1
+    # via dagster
 rpds-py==0.20.0
     # via
     #   jsonschema
     #   referencing
+rsa==4.9
+    # via
+    #   google-auth
+    #   oauth2client
 send2trash==1.8.3
     # via jupyter-server
 six==1.16.0
     # via
     #   asttokens
     #   bleach
+    #   kubernetes
+    #   oauth2client
     #   python-dateutil
     #   rfc3339-validator
 sniffio==1.3.1
@@ -277,16 +514,32 @@ sniffio==1.3.1
     #   httpx
 soupsieve==2.5
     # via beautifulsoup4
+sqlalchemy==2.0.32
+    # via
+    #   alembic
+    #   dagster
 stack-data==0.6.3
     # via ipython
+starlette==0.38.2
+    # via
+    #   dagster-graphql
+    #   dagster-webserver
+structlog==24.4.0
+    # via dagster
+tabulate==0.9.0
+    # via dagster
 terminado==0.18.1
     # via
     #   jupyter-server
     #   jupyter-server-terminals
 tinycss2==1.3.0
     # via nbconvert
+tomli==2.0.1
+    # via dagster
 toolz==0.12.1
     # via cytoolz
+toposort==1.10
+    # via dagster
 tornado==6.4.1
     # via
     #   ipykernel
@@ -294,6 +547,8 @@ tornado==6.4.1
     #   jupyter-server
     #   jupyterlab
     #   terminado
+tqdm==4.66.5
+    # via dagster
 traitlets==5.14.3
     # via
     #   comm
@@ -312,14 +567,31 @@ types-python-dateutil==2.9.0.20240316
     # via arrow
 typing-extensions==4.12.2
     # via
+    #   alembic
+    #   dagster
     #   eth-typing
     #   pydantic
+    #   sqlalchemy
 tzdata==2024.1
     # via pandas
+universal-pathlib==0.2.2
+    # via dagster
 uri-template==1.3.0
     # via jsonschema
+uritemplate==4.1.1
+    # via google-api-python-client
 urllib3==2.2.2
-    # via requests
+    # via
+    #   kubernetes
+    #   requests
+uvicorn[standard]==0.30.6
+    # via dagster-webserver
+uvloop==0.20.0
+    # via uvicorn
+watchdog==4.0.2
+    # via dagster
+watchfiles==0.23.0
+    # via uvicorn
 wcwidth==0.2.13
     # via prompt-toolkit
 webcolors==24.6.0
@@ -329,9 +601,15 @@ webencodings==0.5.1
     #   bleach
     #   tinycss2
 websocket-client==1.8.0
-    # via jupyter-server
+    # via
+    #   jupyter-server
+    #   kubernetes
+websockets==12.0
+    # via uvicorn
 yarl==1.9.4
-    # via gql
+    # via
+    #   aiohttp
+    #   gql
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools

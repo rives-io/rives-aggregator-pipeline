@@ -1,7 +1,6 @@
 .*
 !.gitignore
 !.dockerignore
-!.github
 *~
 
 # Byte-compiled / optimized / DLL files

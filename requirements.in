@@ -3,3 +3,11 @@ pandas
 requests
 gql[requests]
 python-cartesi
+dagster
+dagster-gcp
+dagster-k8s
+dagster-postgres
+dagster-webserver
+pytest
+gcsfs
+psycopg2

@@ -1,0 +1,41 @@
+name: build-vanguard
+run-name: Building Image for Vanguard Deploy
+on:
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: rives-aggregator-pipeline
+
+jobs:
+  build-frontend:
+    runs-on: ubuntu-latest
+
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: >-
+          docker build . --tag $IMAGE_NAME
+          --label "runnumber=${GITHUB_RUN_ID}"
+          --label "org.opencontainers.image.title=$IMAGE_NAME"
+          --label "org.opencontainers.image.description=RIVES Aggregator Pipeline"
+          --label "org.opencontainers.image.source=https://github.com/rives-io/rives-aggregator-pipeline"
+
+      - name: Log in to registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
+
+      - name: Push image
+        run: |
+          IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+
+          VERSION=$(git log -1 --format="%at" | xargs -I{} date -d @{} +%Y%m%d.%H%M).$(git rev-parse --short HEAD)-vanguard
+
+          echo Will push $IMAGE_ID:$VERSION
+
+          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+          docker push $IMAGE_ID:$VERSION

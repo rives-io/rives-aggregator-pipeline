@@ -3,9 +3,10 @@ Rives Adapter
 """
 import datetime
 import json
-from typing import Iterable
+from typing import Annotated, Iterable, List
 
-from cartesi.abi import Bytes32, Int, Address, UInt, String, decode_to_model
+from cartesi.abi import (Bytes32, Int, Address, UInt, String, decode_to_model,
+                         ABIType)
 from pydantic import BaseModel
 import requests
 from gql import gql, Client
@@ -38,7 +39,7 @@ fragment noticeFields on Notice {
 """
 
 
-class VerificationOutput(BaseModel):
+class VerificationOutputOld(BaseModel):
     version:                Bytes32
     cartridge_id:           Bytes32
     cartridge_input_index:  Int
@@ -50,6 +51,25 @@ class VerificationOutput(BaseModel):
     tape_hash:              Bytes32
     tape_input_index:       Int
     error_code:             UInt
+
+
+Bytes32List = Annotated[List[bytes], ABIType('bytes32[]')]
+
+
+class VerificationOutput(BaseModel):
+    version:                Bytes32
+    cartridge_id:           Bytes32
+    cartridge_input_index:  Int
+    cartridge_user_address: Address
+    user_address:           Address
+    timestamp:              UInt
+    score:                  Int
+    rule_id:                Bytes32
+    rule_input_index:       Int
+    tape_id:                Bytes32
+    tape_input_index:       Int
+    error_code:             UInt
+    tapes:                  Bytes32List
 
 
 class NoticeProof(BaseModel):
@@ -118,20 +138,25 @@ def _decode_inspect(response: dict) -> list[dict]:
 
 class Rives:
 
-    def __init__(self, url_prefix: str, validator_addr: str) -> None:
-        self.url_prefix: str = url_prefix
-        self.validator_addr: str = validator_addr
+    def __init__(
+        self,
+        inspect_url_prefix: str,
+        graphql_url_prefix: str
+    ) -> None:
+        self.inspect_url_prefix: str = inspect_url_prefix
+        self.graphql_url_prefix: str = graphql_url_prefix
+
         self.session = requests.Session()
         self.graphql: Client = self._get_graphql_client()
 
     def _get_graphql_client(self) -> Client:
-        transport = RequestsHTTPTransport(url=self._assemble_url('/graphql'))
+        transport = RequestsHTTPTransport(url=self.graphql_url_prefix)
         client = Client(transport=transport)
         return client
 
-    def _assemble_url(self, suffix: str):
+    def _assemble_inspect_url(self, suffix: str):
 
-        prefix = self.url_prefix
+        prefix = self.inspect_url_prefix
         if prefix.endswith('/'):
             prefix = prefix[:-1]
 
@@ -142,7 +167,7 @@ class Rives:
 
     def _inspect_scores(self, contest_id: str, n_records: int = 100):
 
-        url = self._assemble_url('inspect/indexer/indexer_query')
+        url = self._assemble_inspect_url('indexer/indexer_query')
 
         params = {
             'tags': [
@@ -193,7 +218,10 @@ class Rives:
         notices = []
 
         for entry in resp.values():
-            proof = NoticeProof.parse_graphql_response(entry.get('proof'))
+            proof = None
+            raw_proof = entry.get('proof')
+            if raw_proof is not None:
+                proof = NoticeProof.parse_graphql_response(raw_proof)
 
             bytes_payload = bytes.fromhex(entry['payload'][2:])
             payload = decode_to_model(data=bytes_payload,
@@ -227,4 +255,3 @@ class Rives:
 
         notices = self._resolve_notices(pointers)
         return notices
-
