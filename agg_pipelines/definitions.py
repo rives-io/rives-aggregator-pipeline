@@ -33,7 +33,7 @@ leaderboard_job = define_asset_job(
 
 leaderboard_schedule = ScheduleDefinition(
     job=leaderboard_job,
-    cron_schedule="*/15 * * * *",
+    cron_schedule="0 * * * *",
     default_status=DefaultScheduleStatus.RUNNING,
 )
 
