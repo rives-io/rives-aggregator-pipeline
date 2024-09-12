@@ -24,32 +24,8 @@ def tournament_contests() -> list[Dict[str, str]]:
     # TODO: Retrieve fom configuration file (in GCS as well?)
     return [
         {
-            'contest_id': '2990bb8dc10d2990bb8dc10d7344e953be5362cd',
+            'contest_id': '721f735bbca3721f735bbca37344e953be5362cd',
             'name': 'Lightning Run',
-        },
-        {
-            'contest_id': '2990bb8dc10d2990bb8dc10d49311acf7d414378',
-            'name': 'Knuckle Crusher',
-        },
-        {
-            'contest_id': '2990bb8dc10d2990bb8dc10dbc0c9a3c8f9d03de',
-            'name': 'Infallible Aim',
-        },
-        {
-            'contest_id': '2990bb8dc10d2990bb8dc10d8baf804234f09e2e',
-            'name': 'Secret Master',
-        },
-        {
-            'contest_id': '2990bb8dc10d2990bb8dc10dde8c8af042857714',
-            'name': 'Treasure Seeker',
-        },
-        {
-            'contest_id': '2990bb8dc10d2990bb8dc10d96345ea884a19e7d',
-            'name': 'The Completionist',
-        },
-        {
-            'contest_id': '2990bb8dc10d2990bb8dc10d98e1aecc0ec47a04',
-            'name': 'Enemy Eradicator',
         },
     ]
 
