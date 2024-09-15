@@ -30,20 +30,33 @@ def _dataframe_from_notices(notices: list[Notice]):
             'tape_id': x.payload.tape_id.hex(),
             'score': x.payload.score,
             'user_address': x.payload.user_address,
+            'error_code': x.payload.error_code,
             'proof': x.proof,
         }
         for x in notices
     ]
-    return pd.DataFrame.from_records(records)
+    df = (
+        pd.DataFrame.from_records(records)
+        .query('error_code == 0')
+    )
+    return df
 
 
-def _points_by_rank(rank: int) -> float:
+def _points_by_rank_linear(rank: int) -> float:
     """
     Give a number of points based on the player rank inside the contest
     """
     if rank > 1000:
         return np.exp(1000 - rank)
     return float(1001 - rank)
+
+
+def _points_by_rank(rank: int):
+    if rank <= 10:
+        return 1000 - 3 * (rank - 1)
+    if rank <= 100:
+        return 973 - 2 * (rank - 10)
+    return 793 - (rank - 100)
 
 
 def _score_contest(group):
@@ -192,6 +205,7 @@ def leaderboard_frontend_data(
 
     formatted_data = {
         'contests': contests,
+        'created': datetime.datetime.now(tz=datetime.timezone.utc).isoformat(),
         'leaderboard': leaderboard,
     }
 
