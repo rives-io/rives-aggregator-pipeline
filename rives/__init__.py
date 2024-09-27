@@ -3,11 +3,12 @@ Rives Adapter
 """
 import datetime
 import json
-from typing import Annotated, Iterable, List
+from typing import Annotated, Iterable, List, Generic, TypeVar
 
 from cartesi.abi import (Bytes32, Int, Address, UInt, String, decode_to_model,
-                         ABIType)
+                         ABIType, Bytes)
 from pydantic import BaseModel
+from pydantic.generics import GenericModel
 import requests
 from gql import gql, Client
 from gql.transport.requests import RequestsHTTPTransport
@@ -35,6 +36,17 @@ fragment noticeFields on Notice {
     }
     context
   }
+}
+"""
+
+INPUT_FIELDS_FRAGMENT = """
+fragment inputFields on Input {
+  index
+  status
+  msgSender
+  timestamp
+  blockNumber
+  payload
 }
 """
 
@@ -120,6 +132,36 @@ class OutputPointer(BaseModel):
     output_index: int
 
 
+class InputPointer(BaseModel):
+    type: str
+    module: str
+    class_name: str
+    input_index: int
+    dapp_address: str
+
+
+ABIModel = TypeVar('ABIModel')
+
+
+class Input(GenericModel, Generic[ABIModel]):
+    index: int
+    status: str
+    msg_sender: str
+    block_timestamp: datetime.datetime
+    block_number: int
+    prefix: str | None = None
+    payload: ABIModel
+
+
+class VerifyPayload(BaseModel):
+    rule_id:        Bytes32
+    outcard_hash:   Bytes32
+    tape:           Bytes
+    claimed_score:  Int
+    tapes:          Bytes32List
+    in_card:        Bytes
+
+
 def _decode_inspect(response: dict) -> list[dict]:
     assert response.get('status') == 'Accepted'
 
@@ -165,15 +207,20 @@ class Rives:
 
         return prefix + '/' + suffix
 
-    def _inspect_scores(self, contest_id: str, n_records: int = 100):
+    def _inspect_scores(
+        self,
+        contest_id: str | None = None,
+        n_records: int = 100
+    ):
 
         url = self._assemble_inspect_url('indexer/indexer_query')
 
+        tags = ['score']
+        if contest_id is not None:
+            tags.append(contest_id)
+
         params = {
-            'tags': [
-                'score',
-                contest_id,
-            ],
+            'tags': tags,
             'type': 'notice',
             'order_by': 'value',
             'order_dir': 'desc',
@@ -187,6 +234,28 @@ class Rives:
 
         assert len(reports) == 1, "Expected only one report."
         return [OutputPointer.parse_obj(x) for x in reports[0]['data']]
+
+    def _inspect_tapes(self, n_records: int = 100):
+
+        url = self._assemble_inspect_url('indexer/indexer_query')
+
+        params = {
+            'tags': [
+                'tape',
+            ],
+            'type': 'input',
+            'order_by': 'timestamp',
+            'order_dir': 'desc',
+            'page': 1,
+            'page_size': n_records,
+        }
+
+        resp = self.session.get(url, params=params)
+
+        reports = _decode_inspect(resp.json())
+
+        assert len(reports) == 1, "Expected only one report."
+        return [InputPointer.parse_obj(x) for x in reports[0]['data']]
 
     def _get_graphql_query(self, pointers: list[OutputPointer]) -> str:
         assert pointers
@@ -205,6 +274,25 @@ class Rives:
 
         final_query = f'query {{\n{"\n".join(queries)}\n}}\n'
         final_query += NOTICE_FIELDS_FRAGMENT
+        return final_query
+
+    def _get_inputs_graphql_query(self, pointers: list[InputPointer]) -> str:
+        assert pointers
+        queries = []
+
+        for idx, pointer in enumerate(pointers):
+            alias = f'input_{idx}'
+
+            if pointer.type != 'input':
+                continue
+
+            queries.append(
+                f'{alias}: input(index: {pointer.input_index})'
+                f' {{...inputFields}}'
+            )
+
+        final_query = f'query {{\n{"\n".join(queries)}\n}}\n'
+        final_query += INPUT_FIELDS_FRAGMENT
         return final_query
 
     def _resolve_notices(self, pointers: list[OutputPointer]) -> list[Notice]:
@@ -241,6 +329,48 @@ class Rives:
             notices.append(notice)
 
         return notices
+
+    def _resolve_inputs(
+        self,
+        pointers: list[InputPointer],
+        payload_class: BaseModel,
+        proxy: bool = True,
+    ) -> list[Input]:
+        if not pointers:
+            return []
+
+        query = self._get_inputs_graphql_query(pointers)
+        query = gql(query)
+        resp = self.graphql.execute(query)
+
+        inputs = []
+
+        for entry in resp.values():
+
+            bytes_payload = bytes.fromhex(entry['payload'][2:])
+            if proxy:
+                data_payload = bytes_payload[24:]
+                msg_sender = '0x' + bytes_payload[4:24].hex()
+            else:
+                data_payload = bytes_payload[4:]
+                msg_sender = entry['msgSender']
+
+            payload = decode_to_model(data=data_payload,
+                                      model=payload_class)  # type: ignore
+
+            input = Input[payload_class](
+                index=entry['index'],
+                status=entry['status'],
+                msg_sender=msg_sender,
+                block_number=entry['blockNumber'],
+                block_timestamp=entry['timestamp'],
+                payload=payload,
+
+            )
+
+            inputs.append(input)
+
+        return inputs
 
     def get_contests_scores(
         self,
