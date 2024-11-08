@@ -10,10 +10,10 @@ from dagster import (
 from dagster_gcp.gcs import GCSPickleIOManager, GCSResource
 
 from rives import Rives
-from . import assets, resources
+from . import assets, resources, cartridge_assets
 
 
-all_assets = load_assets_from_modules([assets])
+all_assets = load_assets_from_modules([assets, cartridge_assets])
 
 io_manager = {}
 
@@ -53,6 +53,12 @@ defs = Definitions(
         'public_bucket': resources.PublicBucket(
             base_path=EnvVar('PUBLIC_BUCKET_BASE_PATH')
         ),
+        'aggregator': resources.Aggregator(
+            base_url=EnvVar('AGGREGATOR_URL_PREFIX')
+        ),
         **io_manager,
     },
+    sensors=[
+        cartridge_assets.cartridge_sensor,
+    ]
 )

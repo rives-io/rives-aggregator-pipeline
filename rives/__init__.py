@@ -162,6 +162,53 @@ class VerifyPayload(BaseModel):
     in_card:        Bytes
 
 
+class Cartridge(BaseModel):
+    id: str
+    name: str
+    user_address: str
+    created_at: datetime.datetime
+    updated_at: datetime.datetime
+    primary: bool
+    last_version: str
+
+
+class CartridgeAuthor(BaseModel):
+    name: str
+    link: str
+
+
+class CartridgeDetails(BaseModel):
+    name: str
+    summary: str | None
+    description: str | None
+    version: str | None
+    status: str | None
+    tags: list[str] | None
+    authors: list[CartridgeAuthor] | None
+    links: list[str] | None
+    tapes: list[str] | None
+
+
+class CartridgeInfo(BaseModel):
+    id: str
+    name: str
+    user_address: str
+    input_index: int | None
+    authors: list[str] | None
+    info: CartridgeDetails | None
+    original_info: CartridgeDetails | None
+    created_at: datetime.datetime
+    updated_at: datetime.datetime
+    cover: str | None
+    active: bool | None
+    primary: bool | None
+    primary_id: str | None
+    last_version: str | None
+    versions: list[str] | None
+    tapes: list[str] | None
+    tags:  list[str] | None
+
+
 def _decode_inspect(response: dict) -> list[dict]:
     assert response.get('status') == 'Accepted'
 
@@ -207,14 +254,18 @@ class Rives:
 
         return prefix + '/' + suffix
 
+    def _inspect(self, url_suffix: str, params: dict = {}):
+
+        url = self._assemble_inspect_url(url_suffix)
+        resp = self.session.get(url, params=params)
+        reports = _decode_inspect(resp.json())
+        return reports
+
     def _inspect_scores(
         self,
         contest_id: str | None = None,
         n_records: int = 100
     ):
-
-        url = self._assemble_inspect_url('indexer/indexer_query')
-
         tags = ['score']
         if contest_id is not None:
             tags.append(contest_id)
@@ -228,9 +279,7 @@ class Rives:
             'page_size': n_records,
         }
 
-        resp = self.session.get(url, params=params)
-
-        reports = _decode_inspect(resp.json())
+        reports = self._inspect('indexer/indexer_query', params=params)
 
         assert len(reports) == 1, "Expected only one report."
         return [OutputPointer.parse_obj(x) for x in reports[0]['data']]
@@ -385,3 +434,22 @@ class Rives:
 
         notices = self._resolve_notices(pointers)
         return notices
+
+    def list_cartridges(self) -> list[Cartridge]:
+
+        reports = self._inspect('core/cartridges')
+
+        assert len(reports) == 1, "Expected only one report."
+        return [Cartridge.parse_obj(x) for x in reports[0]['data']]
+
+    def get_cartridge_info(self, cartridge_id: str):
+
+        reports = self._inspect(
+            'core/cartridge_info',
+            params={
+                'id': cartridge_id
+            }
+        )
+
+        assert len(reports) == 1, "Expected only one report."
+        return CartridgeInfo.parse_obj(reports[0])
