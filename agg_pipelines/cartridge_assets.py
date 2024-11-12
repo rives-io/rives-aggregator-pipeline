@@ -75,6 +75,26 @@ def cartridge_creator_achievement(
     context.log.info(f'Will award achievement to user {cartridge.user_address}'
                      f' for cartridge {cartridge.id} ({cartridge.name})')
 
+    existing_achievement = aggregator.gen_console_achievements_for_profile(
+        profile_address=cartridge.user_address
+    )
+
+    existing_achievement = [
+        x for x in existing_achievement
+        if x['ca_slug'] == 'cartridge-creator'
+    ]
+
+    if len(existing_achievement) == 0:
+        # Send a notification if this is the first time awarding this kind of
+        # achievement
+        aggregator.send_notification(
+            profile_address=cartridge.user_address,
+            title='New Achievement',
+            message='Cartridge Creator',
+            url=f'/cartridges/{cartridge.id}',
+            created_at=cartridge.created_at,
+        )
+
     aggregator.award_ca(
         profile_address=cartridge.user_address,
         ca_slug='cartridge-creator',

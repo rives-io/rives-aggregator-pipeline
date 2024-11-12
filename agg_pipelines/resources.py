@@ -1,5 +1,6 @@
 import datetime
 import json
+from typing import Generator
 from urllib.parse import urljoin
 
 from dagster import ConfigurableResource
@@ -74,4 +75,67 @@ class Aggregator(ConfigurableResource):
         }
 
         resp = self._session.post(url=url, json=payload)
+        resp.raise_for_status()
+
+    def gen_items(
+        self,
+        url: str,
+        params: dict = {},
+        page_size: int = 50,
+    ) -> Generator[dict, None, None]:
+
+        offset = 0
+
+        while True:
+            request_params = params.copy()
+            request_params['limit'] = page_size
+            request_params['offset'] = offset
+
+            resp = self._session.get(
+                url=url,
+                params=request_params
+            )
+            resp.raise_for_status()
+
+            data = resp.json()
+
+            if len(data['items']) == 0:
+                break
+
+            yield from data['items']
+
+            offset += len(data['items'])
+
+    def gen_console_achievements_for_profile(
+        self,
+        profile_address: str,
+    ) -> Generator[dict, None, None]:
+        url = urljoin(
+            self.base_url,
+            f'agg/profile/{profile_address}/console_achievements'
+        )
+        yield from self.gen_items(url=url)
+
+    def send_notification(
+        self,
+        profile_address: str,
+        title: str,
+        message: str,
+        url: str,
+        created_at: datetime.datetime | None = None,
+    ):
+        url = urljoin(self.base_url, 'agg_rw/notifications')
+
+        if created_at is not None:
+            created_at = created_at.isoformat()
+
+        payload = {
+            'profile_address': profile_address,
+            'title': title,
+            'message': message,
+            'url': url,
+            'created_at': created_at,
+        }
+
+        resp = self._session.put(url=url, json=payload)
         resp.raise_for_status()
