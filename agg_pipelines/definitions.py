@@ -10,10 +10,11 @@ from dagster import (
 from dagster_gcp.gcs import GCSPickleIOManager, GCSResource
 
 from rives import Rives
-from . import assets, resources, cartridge_assets
+from . import assets, resources, cartridge_assets, tape_assets, rule_assets
 
 
-all_assets = load_assets_from_modules([assets, cartridge_assets])
+all_assets = load_assets_from_modules([assets, cartridge_assets, tape_assets,
+                                       rule_assets])
 
 io_manager = {}
 
@@ -56,9 +57,14 @@ defs = Definitions(
         'aggregator': resources.Aggregator(
             base_url=EnvVar('AGGREGATOR_URL_PREFIX')
         ),
+        'gif_server': resources.GifServer(
+            base_url=EnvVar('GIFSERVER_URL_PREFIX')
+        ),
         **io_manager,
     },
     sensors=[
         cartridge_assets.cartridge_sensor,
+        tape_assets.tape_sensor,
+        rule_assets.rule_sensor,
     ]
 )

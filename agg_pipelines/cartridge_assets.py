@@ -25,7 +25,7 @@ def cartridge(
     return Cartridge.parse_obj(config.cartridge)
 
 
-@dg.sensor(target=[cartridge])
+@dg.sensor(target=[cartridge], minimum_interval_seconds=120)
 def cartridge_sensor(
     context: dg.SensorEvaluationContext,
     rives: dg.ResourceParam[Rives],
@@ -100,4 +100,24 @@ def cartridge_creator_achievement(
         ca_slug='cartridge-creator',
         created_at=cartridge.created_at.isoformat(),
         comments=f'Created cartridge {cartridge.name}'
+    )
+
+
+@dg.asset(
+    automation_condition=dg.AutomationCondition.eager(),
+    partitions_def=cartridge_parts,
+)
+def cartridge_record(
+    cartridge: Cartridge,
+    aggregator: Aggregator,
+    rives: dg.ResourceParam[Rives],
+):
+    info = rives.get_cartridge_info(cartridge.id)
+
+    aggregator.put_cartridge(
+        cartridge_id=cartridge.id,
+        name=info.name,
+        authors=', '.join(info.authors),
+        created_at=info.created_at,
+        creator_address=info.user_address,
     )

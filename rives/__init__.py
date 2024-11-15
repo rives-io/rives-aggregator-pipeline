@@ -209,6 +209,26 @@ class CartridgeInfo(BaseModel):
     tags:  list[str] | None
 
 
+class Rule(BaseModel):
+    id: str
+    name: str
+    description: str | None
+    cartridge_id: str
+    created_by: str
+    created_at: datetime.datetime
+    args: str | None
+    in_card: str | None
+    score_function: str | None
+    start: datetime.datetime | None
+    end: datetime.datetime | None
+    tapes: list[str] | None
+    allow_tapes: bool | None
+    allow_in_card: bool | None
+    save_tapes: bool | None
+    save_out_cards: bool | None
+    tags: list[str] | None
+
+
 def _decode_inspect(response: dict) -> list[dict]:
     assert response.get('status') == 'Accepted'
 
@@ -453,3 +473,14 @@ class Rives:
 
         assert len(reports) == 1, "Expected only one report."
         return CartridgeInfo.parse_obj(reports[0])
+
+    def get_rules(self):
+
+        reports = self._inspect('core/rules', params={
+                'order_by': 'created_at',
+                'order_dir': 'desc',
+            }
+        )
+
+        assert len(reports) == 1, "Expected only one report."
+        return [Rule.parse_obj(x) for x in reports[0]['data']]
