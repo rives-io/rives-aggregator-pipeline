@@ -127,7 +127,7 @@ class Aggregator(ConfigurableResource):
         url: str,
         created_at: datetime.datetime | str | None = None,
     ):
-        url = urljoin(self.base_url, 'agg_rw/notifications')
+        request_url = urljoin(self.base_url, 'agg_rw/notifications')
 
         if created_at is not None:
             if isinstance(created_at, datetime.datetime):
@@ -141,7 +141,7 @@ class Aggregator(ConfigurableResource):
             'created_at': created_at,
         }
 
-        resp = self._session.put(url=url, json=payload)
+        resp = self._session.put(url=request_url, json=payload)
         resp.raise_for_status()
 
     def put_cartridge(
