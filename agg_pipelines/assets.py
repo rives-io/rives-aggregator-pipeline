@@ -24,32 +24,36 @@ def tournament_contests() -> list[Dict[str, str]]:
     # TODO: Retrieve fom configuration file (in GCS as well?)
     return [
         {
-            'contest_id': '721f735bbca3721f735bbca37344e953be5362cd',
-            'name': 'Lightning Run',
+            'contest_id': 'daee50b09c08daee50b09c082d9fb5c34017765d',
+            'name': 'Battier',
         },
         {
-            'contest_id': '721f735bbca3721f735bbca349311acf7d414378',
-            'name': 'Knuckle Crusher',
+            'contest_id': '7654435bf0677654435bf06780bf0867f86e8308',
+            'name': 'Slither Slide',
         },
         {
-            'contest_id': '721f735bbca3721f735bbca3bc0c9a3c8f9d03de',
-            'name': 'Infallible Aim'
+            'contest_id': '9c02cdf2651371c1a099c69399abea549f9829c5',
+            'name': 'Rush Hour'
         },
         {
-            'contest_id': '721f735bbca3721f735bbca38baf804234f09e2e',
-            'name': 'Secret Master',
+            'contest_id': '3b9bcf0b44f63b9bcf0b44f6c89067fe48394127',
+            'name': 'Slopeng',
         },
         {
-            'contest_id': '721f735bbca3721f735bbca3de8c8af042857714',
-            'name': 'Treasure Seeker',
+            'contest_id': 'bba40250eaebbba40250eaeb73dbd9a5e23f698e',
+            'name': 'Pakboy',
         },
         {
-            'contest_id': '721f735bbca3721f735bbca396345ea884a19e7d',
-            'name': 'The Completionist',
+            'contest_id': '8ac94c79ac698ac94c79ac69ce3890ec8410d499',
+            'name': 'The Rhythm Spell Caster',
         },
         {
-            'contest_id': '721f735bbca3721f735bbca398e1aecc0ec47a04',
-            'name': 'Enemy Eradicator',
+            'contest_id': '8354300547af8354300547afcc55a29edd730116',
+            'name': 'Space Warrior',
+        },
+        {
+            'contest_id': 'a612d46cd43fa612d46cd43f27d696da8ea75e9f',
+            'name': 'Slalom',
         },
     ]
 
