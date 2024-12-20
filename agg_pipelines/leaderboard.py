@@ -59,18 +59,42 @@ def _points_by_rank(rank: int):
     return 793 - (rank - 100)
 
 
-def _score_contest(group):
+def _score_contest(group: pd.DataFrame, all_players: list[str] | None = None):
     """
     Create scores for a single contest
     """
-    return (
+    ranked_group = (
         group
         .sort_values(by='score', ascending=False)
         .drop_duplicates(subset=['user_address'], keep='first')
         .query('score > 0')
         .assign(rank=lambda x: range(1, x.shape[0] + 1))
-        .assign(points=lambda x: x['rank'].apply(_points_by_rank))
     )
+
+    if all_players is not None:
+        missing_rank = ranked_group.shape[0] + 1
+
+        players = set(ranked_group['user_address'])
+
+        cartridge_id = ranked_group['cartridge_id'].iloc[0]
+
+        missing_players = [x for x in all_players if x not in players]
+        missing_players_df = pd.DataFrame(
+            [
+                {
+                    'cartridge_id': cartridge_id,
+                    'user_address': player,
+                    'rank': missing_rank,
+                }
+                for player in missing_players
+            ]
+        )
+        ranked_group = pd.concat([ranked_group, missing_players_df], axis=0)
+
+    ranked_group = ranked_group.assign(
+        points=lambda x: x['rank'].apply(_points_by_rank)
+    )
+    return ranked_group
 
 
 def _compute_contest_scores(df_notices: pd.DataFrame) -> pd.DataFrame:
@@ -78,10 +102,12 @@ def _compute_contest_scores(df_notices: pd.DataFrame) -> pd.DataFrame:
     Transforma a DataFrame of notices into a narrow-form dataframe of contest
     scores.
     """
+    all_players = df_notices['user_address'].unique()
+
     return (
         df_notices
         .groupby('rule_id')
-        .apply(_score_contest, include_groups=False)
+        .apply(_score_contest, include_groups=False, all_players=all_players)
         .reset_index()
     )
 

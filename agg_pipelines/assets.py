@@ -55,6 +55,10 @@ def tournament_contests() -> list[Dict[str, str]]:
             'contest_id': 'a612d46cd43fa612d46cd43f27d696da8ea75e9f',
             'name': 'Slalom',
         },
+        {
+            'contest_id': '9c87f0c83eef9c87f0c83eef7e9fc3c1b588bcdb',
+            'name': 'Frost Slide',
+        },
     ]
 
 
