@@ -246,8 +246,9 @@ def _decode_inspect(response: dict) -> list[dict]:
     assert response.get('status') == 'Accepted'
 
     reports = []
-
-    for report in response.get('reports', []):
+    raw_reports = response.get('reports', [])
+    if raw_reports is None: return reports
+    for report in raw_reports:
         payload = bytes.fromhex(report['payload'][2:])
 
         try:
@@ -517,7 +518,7 @@ class Rives:
         reports = self._inspect('core/format_in_card', params={
                 'rule_id': rule_id,
                 'tapes': tapes,
-                'in_card': in_card + 'deadbeef'
+                'in_card': in_card
             }
         )
 
