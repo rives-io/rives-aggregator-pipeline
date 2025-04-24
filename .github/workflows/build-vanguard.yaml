@@ -7,7 +7,7 @@ env:
   IMAGE_NAME: rives-aggregator-pipeline
 
 jobs:
-  build-frontend:
+  build-aggregator-pipeline:
     runs-on: ubuntu-latest
 
     permissions:

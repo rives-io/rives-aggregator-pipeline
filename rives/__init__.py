@@ -254,7 +254,7 @@ def _decode_inspect(response: dict) -> list[dict]:
         try:
             decoded = json.loads(payload.decode('utf-8'))
         except Exception:
-            decoded = {'__raw': payload}
+            decoded = {'_raw': payload}
         reports.append(decoded)
     return reports
 
