@@ -1,10 +1,16 @@
+from base64 import b64encode
+from math import tan
 import datetime
 import json
+from typing import List
+from hashlib import sha256
+import base64
 
 import dagster as dg
 
 from .resources import Aggregator, GifServer
-from rives import Rives, Notice, OutputPointer
+from rives import Input, InputPointer, Rives, Notice, OutputPointer, VerifyPayload, truncate_rule_id_from_bytes, truncate_tape_id_from_bytes
+from socket import fromfd
 
 
 class TapeRunConfig(dg.Config):
@@ -38,7 +44,10 @@ def tape_sensor(
     rives: dg.ResourceParam[Rives],
 ) -> dg.SensorResult:
 
-    ptrs = rives._inspect_scores(n_records=5000)
+    cursor = int(context.cursor or 0)
+    page_size = 500
+    page = cursor//page_size + 1
+    ptrs = rives._inspect_scores(n_records=page_size,page=page)
 
     part_keys = [f'{x.type}/{x.input_index}/{x.output_index}' for x in ptrs]
 
@@ -68,6 +77,9 @@ def tape_sensor(
         )
 
     part_requests = tape_parts.build_add_request(partition_keys=new_keys)
+
+    new_cursor = (page - 1) * page_size + len(ptrs)
+    context.update_cursor(str(new_cursor))
     return dg.SensorResult(
         run_requests=runs,
         dynamic_partitions_requests=[part_requests]
@@ -152,4 +164,43 @@ def tape_creator_achievement(
         created_at=tape_timestamp,
         comments=f'Created tape {tape_id} with score '
                  f'{tape_notice.payload.score}'
+    )
+
+@dg.asset(
+    automation_condition=dg.AutomationCondition.eager(),
+    partitions_def=tape_parts,
+)
+def tape_record_data(
+    aggregator: Aggregator,
+    tape_notice: Notice,
+    rives: dg.ResourceParam[Rives],
+):
+    tape_id = truncate_tape_id_from_bytes(tape_notice.payload.tape_id).hex()
+
+    pointer = InputPointer(
+        type='input',
+        input_index=tape_notice.payload.tape_input_index,
+        module='core',
+        class_name='VerifyPayload',
+        dapp_address='',
+    )
+
+    tape_inputs: List[Input[VerifyPayload]] = rives._resolve_inputs([pointer],VerifyPayload)
+
+    assert len(tape_inputs) == 1, "Failed to retrieve tape inputs"
+
+    tape_input = tape_inputs[0]
+
+    rule_id_bytes = truncate_rule_id_from_bytes(tape_notice.payload.rule_id)
+
+    incard = rives.format_incard(rule_id_bytes.hex(), tape_input.payload.in_card.hex(), [truncate_tape_id_from_bytes(x).hex() for x in tape_input.payload.tapes])
+    rule = rives.get_rule(rule_id_bytes.hex())
+    entropy = sha256(bytes.fromhex(tape_notice.payload.user_address[2:]) + rule_id_bytes).hexdigest()
+
+    aggregator.put_tape(
+        tape_id=tape_id,
+        tape=base64.b64encode(tape_input.payload.tape).decode('utf-8'),
+        incard=base64.b64encode(incard).decode('utf-8'),
+        args=rule.args,
+        entropy=entropy,
     )

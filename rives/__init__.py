@@ -228,19 +228,33 @@ class Rule(BaseModel):
     save_out_cards: bool | None
     tags: list[str] | None
 
+CARTRIDGE_ID_TRUNC_BYTES = 6
+RULE_ID_TRUNC_BYTES = 8
+TAPE_ID_TRUNC_BYTES = 12
+
+def truncate_cartridge_id_from_bytes(id: bytes) -> bytes:
+    return id[:CARTRIDGE_ID_TRUNC_BYTES]
+
+def truncate_rule_id_from_bytes(id: bytes) -> bytes:
+    return id[:(CARTRIDGE_ID_TRUNC_BYTES + CARTRIDGE_ID_TRUNC_BYTES + RULE_ID_TRUNC_BYTES)]
+
+def truncate_tape_id_from_bytes(id: bytes) -> bytes:
+    return id[:(CARTRIDGE_ID_TRUNC_BYTES + CARTRIDGE_ID_TRUNC_BYTES + RULE_ID_TRUNC_BYTES + TAPE_ID_TRUNC_BYTES)]
+
 
 def _decode_inspect(response: dict) -> list[dict]:
     assert response.get('status') == 'Accepted'
 
     reports = []
-
-    for report in response.get('reports', []):
+    raw_reports = response.get('reports', [])
+    if raw_reports is None: return reports
+    for report in raw_reports:
         payload = bytes.fromhex(report['payload'][2:])
 
         try:
             decoded = json.loads(payload.decode('utf-8'))
         except Exception:
-            decoded = {'__raw': payload}
+            decoded = {'_raw': payload}
         reports.append(decoded)
     return reports
 
@@ -284,7 +298,8 @@ class Rives:
     def _inspect_scores(
         self,
         contest_id: str | None = None,
-        n_records: int = 100
+        n_records: int = 100,
+        page: int = 1
     ):
         tags = ['score']
         if contest_id is not None:
@@ -293,9 +308,9 @@ class Rives:
         params = {
             'tags': tags,
             'type': 'notice',
-            'order_by': 'value',
-            'order_dir': 'desc',
-            'page': 1,
+            'order_by': 'timestamp',
+            'order_dir': 'asc',
+            'page': page,
             'page_size': n_records,
         }
 
@@ -484,3 +499,28 @@ class Rives:
 
         assert len(reports) == 1, "Expected only one report."
         return [Rule.parse_obj(x) for x in reports[0]['data']]
+
+    def get_rule(self,rule_id: str):
+
+        reports = self._inspect('core/rules', params={
+                'order_by': 'created_at',
+                'order_dir': 'desc',
+                'id': rule_id
+            }
+        )
+
+        assert len(reports) == 1, "Expected only one report."
+        assert len(reports[0]['data']) == 1, "Expected only one rule."
+        return Rule.parse_obj(reports[0]['data'][0])
+
+    def format_incard(self,rule_id: str, in_card: str, tapes: List[str]):
+
+        reports = self._inspect('core/format_in_card', params={
+                'rule_id': rule_id,
+                'tapes': tapes,
+                'in_card': in_card
+            }
+        )
+
+        assert len(reports) in [0,1], "Expected up to one report."
+        return reports[0]['_raw'] if len(reports) == 1 else b''

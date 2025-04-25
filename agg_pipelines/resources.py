@@ -183,6 +183,10 @@ class Aggregator(ConfigurableResource):
         created_at: datetime.datetime | str | None = None,
         creator_address: str | None = None,
         rule_id: str | None = None,
+        tape: str | None = None,
+        incard: str | None = None,
+        args: str | None = None,
+        entropy: str | None = None,
     ):
         url = urljoin(self.base_url, 'agg_rw/tape')
 
@@ -192,15 +196,19 @@ class Aggregator(ConfigurableResource):
 
         payload = {
             'id': tape_id,
-            'name': name,
-            'score': score,
-            'title': title,
-            'buy_value': buy_value,
-            'sell_value': sell_value,
-            'created_at': created_at,
-            'creator_address': creator_address,
-            'rule_id': rule_id,
         }
+        if name is not None: payload['name'] = name
+        if score is not None: payload['score'] = score
+        if title is not None: payload['title'] = title
+        if buy_value is not None: payload['buy_value'] = buy_value
+        if sell_value is not None: payload['sell_value'] = sell_value
+        if created_at is not None: payload['created_at'] = created_at
+        if creator_address is not None: payload['creator_address'] = creator_address
+        if rule_id is not None: payload['rule_id'] = rule_id
+        if tape is not None: payload['tape'] = tape
+        if incard is not None: payload['incard'] = incard
+        if args is not None: payload['args'] = args
+        if entropy is not None: payload['entropy'] = entropy
 
         resp = self._session.put(url=url, json=payload)
         resp.raise_for_status()
