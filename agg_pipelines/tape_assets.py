@@ -78,7 +78,8 @@ def tape_sensor(
 
     part_requests = tape_parts.build_add_request(partition_keys=new_keys)
 
-    context.update_cursor(str(cursor + len(new_keys)))
+    new_cursor = (page - 1) * page_size + len(ptrs)
+    context.update_cursor(str(new_cursor))
     return dg.SensorResult(
         run_requests=runs,
         dynamic_partitions_requests=[part_requests]
